@@ -1,7 +1,232 @@
-from selenium import webdriver
+import requests
+from bs4 import BeautifulSoup
+import csv
+import time
 
-driver = webdriver.Firefox()
-driver.get('https://www.movoto.com/bakersfield-ca/price-2500000-0/@35.373292,-119.018712/')
 
-street = driver.find_elements_by_xpath('//span[@itemprop="streetAddress"]')
-print(street)
+urls = 'https://www.mlslistings.com/Search/Result/e080a603-4e2f-4a46-bb87-b383825b4d10/1?view=list'
+
+csv_file = open('mls3.csv', 'w')
+csv_writer = csv.writer(csv_file)
+csv_writer.writerow(
+    [
+        'address', 'price', 'listing_status', 'days_on_site', 'type', 'MLS_number', 'beds', 'baths', 'sq_ft_lot', 'garage', 'sq_ft', 'year_built', 'desc', 'bedrooms_desc', 'bathroom_desc',
+        'kitchen_desc', 'dining_room_desc', 'family_room_desc', 'fireplace_desc', 'flooring_desc', 'laundry_desc', 'cooling_desc', 'heating_desc', 'roof_desc', 'fundation_desc', 'pool_desc',
+        'style_desc', 'horse_property_desc', 'garage_desc', 'elementary_district_desc', 'high_school_district_desc', 'unit_levels_desc', 'sewer_desc', 'water_desc', 'hoa_fee_desc',
+        'complex_amenities_desc', 'zoning_desc'
+    ])
+
+while urls:
+    payload = {
+                'key': '10f2bf398f398075ba707a72d2909dfb', 'url':
+                urls
+              }
+
+    r = requests.get('http://api.scraperapi.com', params=payload).text
+
+    soup = BeautifulSoup(r, 'lxml')
+
+    for houses in soup.find_all('div', class_='card card-block pt-1 pb-1 px-1'):
+        try:
+            address = houses.find('h5', class_='card-title font-weight-bold listing-address mb-25').text
+            print(address)
+            price = houses.find('span', class_='font-weight-bold listing-price d-block pull-left pr-25').text
+            print(price)
+            listing_status = houses.find('span', class_='listing-statusd-block pull-left pl-50 pr-1 status-marker status-active').text
+            print(listing_status)
+            days_on_site = houses.find('span', class_='listing-dom-block pull-left pl-25 ').text.strip(' Days on Site')
+            print(days_on_site)
+            type = houses.find('div', class_='listing-info clearfix font-size-sm line-height-base listing-type mb-25').text.strip()
+            print(type)
+            MLS_number = houses.find('span', class_='info-item-label d-block pull-left font-weight-bold').text
+            print(MLS_number)
+            beds = houses.find('span', class_='listing-info-item font-size-sm line-height-base d-block pull-left pr-50 listing-beds').span.text
+            print(beds)
+            baths = houses.find('span', class_='listing-info-item font-size-sm line-height-base d-block pull-left pr-50 listing-baths').span.string
+            print(baths)
+            sq_ft = houses.find('span', class_='font-weight-bold info-item-value d-block pull-left pr-25').text
+            print(sq_ft)
+            sq_ft_lot = houses.find('span', class_='listing-info-item font-size-sm line-height-base d-block pull-left pr-50 listing-lot-size').span.text
+            print(sq_ft_lot)
+            garage = houses.find('span', class_='listing-info-item font-size-sm line-height-base d-block pull-left pr-50 listing-garage').span.text
+            print(garage)
+            for sy in houses.find_all('span', class_='listing-info-item font-size-sm line-height-base d-block pull-left pr-50 listing-sqft last'):
+                if sy.find('span', class_='info-item-label d-block pull-left').text == 'Sq Ft':
+                    sq_ft = sy.span.text
+                    print(sq_ft)
+                elif sy.find('span', class_='info-item-label d-block pull-left').text == 'Year Built':
+                    year_built = sy.span.text
+                    print(year_built)
+                else:
+                    sq_ft = None
+                    year_built = None
+        except Exception as e:
+            result = None
+
+    for each in soup.find_all('a', class_='search-nav-link prerender'):
+        inside_links = (each.get('href'))
+        link = inside_links.splitlines()
+
+        for links in link:
+            pay = {
+                    'key': '10f2bf398f398075ba707a72d2909dfb', 'url':
+                    'https://www.mlslistings.com' + links
+                  }
+
+            xx = requests.get('http://api.scraperapi.com', params=pay).text
+            ss = BeautifulSoup(xx, 'lxml')
+            for cards in ss.find_all('div', class_='col-xs-12 px-0'):
+                try:
+                    if cards.div.div.div.h5.text == 'About this Property':
+                        desc = cards.div.div.div.findNext('div').p.text.replace(',', '')
+                        #print(desc)
+                        time.sleep(5)
+                    elif cards.div.div.div.h5.text == 'Interior Features':
+                        for tt in cards.find_all('p', class_='card-title font-weight-bold mb-0 font-size-midr line-height-xl'):
+                            if tt.text == 'Bedrooms' and tt.findNext('p').text != '�':
+                                bedrooms_desc = tt.findNext('p').text.replace(',', '')
+                                #print(bedrooms_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Bathrooms' and tt.findNext('p').text != '�':
+                                bathroom_desc = tt.findNext('p').text.replace(',', '')
+                                #print(bathroom_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Kitchen' and tt.findNext('p').text != '�':
+                                kitchen_desc = tt.findNext('p').text.replace(',', '')
+                                #print(kitchen_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Dining Room' and tt.findNext('p').text != '�':
+                                dining_room_desc = tt.findNext('p').text.replace(',', '')
+                                #print(dining_room_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Family Room' and tt.findNext('p').text != '�':
+                                family_room_desc = tt.findNext('p').text.replace(',', '')
+                                #print(family_room_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Fireplace' and tt.findNext('p').text != '�':
+                                fireplace_desc = tt.findNext('p').text.replace(',', '')
+                                #print(fireplace_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Flooring' and tt.findNext('p').text != '�':
+                                flooring_desc = tt.findNext('p').text.replace(',', '')
+                                #print(flooring_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Laundry' and tt.findNext('p').text != '�':
+                                laundry_desc = tt.findNext('p').text.replace(',', '')
+                                #print(laundry_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Cooling' and tt.findNext('p').text != '�':
+                                cooling_desc = tt.findNext('p').text.replace(',', '')
+                                #print(cooling_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Heating' and tt.findNext('p').text != '�':
+                                heating_desc = tt.findNext('p').text.replace(',', '')
+                                #print(heating_desc)
+                                time.sleep(5)
+                            else:
+                                bedrooms_desc = None
+                                bathroom_desc = None
+                                kitchen_desc = None
+                                dining_room_desc = None
+                                family_room_desc = None
+                                fireplace_desc = None
+                                flooring_desc = None
+                                laundry_desc = None
+                                cooling_desc = None
+                                heating_desc = None
+                    elif cards.div.div.div.h5.text == 'Exterior Features':
+                        for tt in cards.find_all('p', class_='card-title font-weight-bold mb-0 font-size-midr line-height-xl'):
+                            if tt.text == 'Roof' and tt.findNext('p').text != '�':
+                                roof_desc = tt.findNext('p').text.replace(',', '')
+                                #print(roof_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Foundation' and tt.findNext('p').text != '�':
+                                fundation_desc = tt.findNext('p').text.replace(',', '')
+                                #print(fundation_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Pool' and tt.findNext('p').text != '�':
+                                pool_desc = tt.findNext('p').text.replace(',', '')
+                                #print(pool_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Style' and tt.findNext('p').text != '�':
+                                style_desc = tt.findNext('p').text.replace(',', '')
+                                #print(style_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Horse Property' and tt.findNext('p').text != '�':
+                                horse_property_desc = tt.findNext('p').text.replace(',', '')
+                                #print(horse_property_desc)
+                                time.sleep(5)
+                            else:
+                                roof_desc = None
+                                fundation_desc = None
+                                pool_desc = None
+                                style_desc = None
+                                horse_property_desc = None
+                    elif cards.div.div.div.h5.text == 'Parking, School, and Other Information'and tt.findNext('p').text != '�':
+                        for tt in cards.find_all('p', class_='card-title font-weight-bold mb-0 font-size-midr line-height-xl'):
+                            if tt.text == 'Garage/Parking' and tt.findNext('p').text != '�':
+                                garage_desc = tt.findNext('p').text.replace(',', '')
+                                #print(garage_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Elementary District' and tt.findNext('p').text != '�':
+                                elementary_district_desc = tt.findNext('p').text.replace(',', '')
+                                #print(elementary_district_desc)
+                                time.sleep(5)
+                            elif tt.text == 'High School District' and tt.findNext('p').text != '�':
+                                high_school_district_desc = tt.findNext('p').text.replace(',', '')
+                                #print(high_school_district_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Unit Levels' and tt.findNext('p').text != '�':
+                                unit_levels_desc = tt.findNext('p').text.replace(',', '')
+                                #print(unit_levels_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Sewer' and tt.findNext('p').text != '�':
+                                sewer_desc = tt.findNext('p').text.replace(',', '')
+                                #print(sewer_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Water' and tt.findNext('p').text != '�':
+                                water_desc = tt.findNext('p').text.replace(',', '')
+                                #print(water_desc)
+                                time.sleep(5)
+                            elif tt.text == 'HOA Fee' and tt.findNext('p').text != '�':
+                                hoa_fee_desc = tt.findNext('p').text.replace(',', '')
+                                #print(hoa_fee_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Complex Amenities' and tt.findNext('p').text != '�':
+                                complex_amenities_desc = tt.findNext('p').text.replace(',', '')
+                                #print(complex_amenities_desc)
+                                time.sleep(5)
+                            elif tt.text == 'Zoning' and tt.findNext('p').text != '�':
+                                zoning_desc = tt.findNext('p').text.replace(',', '')
+                                #print(zoning_desc)
+                                time.sleep(5)
+                            else:
+                                garage_desc = None
+                                elementary_district_desc = None
+                                high_school_district_desc = None
+                                unit_levels_desc = None
+                                sewer_desc = None
+                                water_desc = None
+                                hoa_fee_desc = None
+                                complex_amenities_desc = None
+                                zoning_desc = None
+
+                except Exception as e:
+                    result = None
+
+            csv_writer.writerow(
+                [
+                    address, price, listing_status, days_on_site, type, MLS_number, beds, baths, sq_ft_lot, garage, sq_ft, year_built, desc, bedrooms_desc, bathroom_desc,
+                    kitchen_desc, dining_room_desc, family_room_desc, fireplace_desc, flooring_desc, laundry_desc, cooling_desc, heating_desc, roof_desc, fundation_desc, pool_desc,
+                    style_desc, horse_property_desc, garage_desc, elementary_district_desc, high_school_district_desc, unit_levels_desc, sewer_desc, water_desc, hoa_fee_desc,
+                    complex_amenities_desc, zoning_desc
+                ])
+
+    try:
+        urls = 'https://www.mlslistings.com' + soup.find('a', {'aria-label': 'Next'}).get('href')
+    except Exception as e:
+        break
+
+    print(urls)
+
+csv_file.close()
