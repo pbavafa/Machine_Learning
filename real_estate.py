@@ -11,6 +11,10 @@ Results:
     31/32 houses were captured
     it outputed https://www.mlslistings.com/Search/Result/26b18b9d-ae6e-424c-b7a6-3261a43e950d/2?view=list which is right but id didnt go through the code again to scrape it
     for 31 houes it took 2030.798 seconds or 33.847 minutes (thats with all the timouts not commented out I went through and commented out a bunch of the timeouts)
+
+Result 2:
+    66/66 houses were captured
+    for 66 houes it took 1308.714 seconds or 21.8 min
 '''
 
 import requests
@@ -19,10 +23,10 @@ import csv
 import time
 
 # Put URL here:
-urls = 'https://www.mlslistings.com/Search/Result/26b18b9d-ae6e-424c-b7a6-3261a43e950d/1?view=list'
+urls = 'https://www.mlslistings.com/Search/Result/f8d87a47-8256-435a-a037-37547807c10a/1?view=list'
 
 # CSV name here
-csv_file = open('mls3.csv', 'w')
+csv_file = open('mls4.csv', 'w')
 csv_writer = csv.writer(csv_file)
 csv_writer.writerow(
     [
@@ -102,7 +106,7 @@ while urls:
                         # Level 3
                         desc = cards.div.div.div.findNext('div').p.text.replace(',', '')
                         #print(desc)
-                        time.sleep(2)
+                        #time.sleep(2)
                     # Looks for level 1
                     elif cards.div.div.div.h5.text == 'Interior Features':
                         for tt in cards.find_all('p', class_='card-title font-weight-bold mb-0 font-size-midr line-height-xl'):
