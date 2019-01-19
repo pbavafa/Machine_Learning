@@ -1,10 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
 #import csv
-import time
+#import time
 
 
-urls = 'https://www.mlslistings.com/Search/Result/e080a603-4e2f-4a46-bb87-b383825b4d10/1?view=list'
+urls = 'https://www.mlslistings.com/Search/Result/26b18b9d-ae6e-424c-b7a6-3261a43e950d/1?view=list'
 
 while urls:
     payload = {
@@ -40,8 +40,8 @@ while urls:
                                 for name in names.keys():
                                     ky = tt.find(text=name).findNext('p').text.replace(',', '')
                                     if ky is not None:
-                                        names[name] = name
-                                        print(name)
+                                        names[name] = ky
+                                        print(ky)
 
                 except Exception as e:
                     result = None
